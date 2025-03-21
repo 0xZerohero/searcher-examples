@@ -4,7 +4,8 @@ use std::{
     str::FromStr,
 };
 
-use bincode::serialize;
+use bincode::serde::encode_to_vec;
+// use bincode::serialize;
 use solana_perf::packet::{Packet, PacketBatch, PACKET_DATA_SIZE};
 use solana_sdk::{
     packet::{Meta, PacketFlags},
@@ -105,7 +106,7 @@ pub fn versioned_tx_from_packet(p: &ProtoPacket) -> Option<VersionedTransaction>
 
 /// Coverts a VersionedTransaction to packet
 pub fn packet_from_versioned_tx(tx: VersionedTransaction) -> Packet {
-    let tx_data = serialize(&tx).expect("serializes");
+    let tx_data = encode_to_vec(&tx, bincode::config::legacy()).expect("serializes");
     let mut data = [0; PACKET_DATA_SIZE];
     let copy_len = min(tx_data.len(), data.len());
     data[..copy_len].copy_from_slice(&tx_data[..copy_len]);
@@ -116,7 +117,7 @@ pub fn packet_from_versioned_tx(tx: VersionedTransaction) -> Packet {
 
 /// Converts a VersionedTransaction to a protobuf packet
 pub fn proto_packet_from_versioned_tx(tx: &VersionedTransaction) -> ProtoPacket {
-    let data = serialize(tx).expect("serializes");
+    let data = encode_to_vec(tx, bincode::config::legacy()).expect("serializes");
     let size = data.len() as u64;
     ProtoPacket {
         data,
