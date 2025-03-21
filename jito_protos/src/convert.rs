@@ -33,7 +33,8 @@ pub fn packet_to_proto_packet(p: &Packet) -> Option<ProtoPacket> {
                 forwarded: p.meta().forwarded(),
                 repair: p.meta().repair(),
                 simple_vote_tx: p.meta().is_simple_vote_tx(),
-                tracer_packet: p.meta().is_tracer_packet(),
+                // this should never happen (https://github.com/anza-xyz/agave/pull/4043)
+                tracer_packet: p.meta().flags.contains(PacketFlags::UNUSED_0),
             }),
             sender_stake: 0,
         }),
@@ -69,7 +70,8 @@ pub fn proto_packet_to_packet(p: &ProtoPacket) -> Packet {
                 packet.meta_mut().flags.insert(PacketFlags::FORWARDED);
             }
             if flags.tracer_packet {
-                packet.meta_mut().flags.insert(PacketFlags::TRACER_PACKET);
+                // this should never happen (https://github.com/anza-xyz/agave/pull/4043)
+                packet.meta_mut().flags.insert(PacketFlags::UNUSED_0);
             }
             if flags.repair {
                 packet.meta_mut().flags.insert(PacketFlags::REPAIR);
