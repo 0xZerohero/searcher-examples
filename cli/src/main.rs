@@ -131,18 +131,19 @@ async fn main() {
     match keypair {
         Some(auth_keypair) => {
             let searcher_client_auth =
-                get_searcher_client_auth(args.block_engine_url.as_str(), &auth_keypair)
-                    .await
-                    .unwrap();
-            // .expect("Failed to get searcher client with auth. Note: If you don't pass in the auth keypair, we can attempt to connect to the no auth endpoint");
+                get_searcher_client_auth(
+                    args.block_engine_url.as_str(), 
+                    &auth_keypair
+                ).await
+                .expect("Failed to get searcher client with auth. Note: If you don't pass in the auth keypair, we can attempt to connect to the no auth endpoint");
             process_commands(args, searcher_client_auth).await
         }
         None => {
             let searcher_client_no_auth =
-                get_searcher_client_no_auth(args.block_engine_url.as_str())
-                    .await
-                    .unwrap();
-            // .expect("Failed to get searcher client with auth. Note: If you don't pass in the auth keypair, we can attempt to connect to the no auth endpoint");
+                get_searcher_client_no_auth(
+                    args.block_engine_url.as_str()
+                ).await
+                .expect("Failed to get searcher client");
             process_commands(args, searcher_client_no_auth).await
         }
     }
