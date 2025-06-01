@@ -1,8 +1,8 @@
 [package]
+description = "Wrapper around the generated gRPC. Adds auth and retry semantics."
+edition = "2021"
 name = "jito-searcher-client"
 version = "0.1.0"
-edition = "2021"
-description = "Wrapper around the generated gRPC. Adds auth and retry semantics."
 
 [dependencies]
 futures-util = "0.3.28"
