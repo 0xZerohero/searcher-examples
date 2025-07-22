@@ -33,8 +33,31 @@ pub fn packet_to_proto_packet(p: &Packet) -> Option<ProtoPacket> {
                 forwarded: p.meta().forwarded(),
                 repair: p.meta().repair(),
                 simple_vote_tx: p.meta().is_simple_vote_tx(),
-                tracer_packet: p.meta().is_tracer_packet(),
+                tracer_packet: false,
                 from_staked_node: p.meta().is_from_staked_node(),
+            }),
+            sender_stake: 0,
+        }),
+    })
+}
+
+/// Converts a PacketRef to a protobuf packet
+pub fn packet_ref_to_proto_packet(
+    packet_ref: solana_perf::packet::PacketRef,
+) -> Option<ProtoPacket> {
+    Some(ProtoPacket {
+        data: packet_ref.data(..)?.to_vec(),
+        meta: Some(ProtoMeta {
+            size: packet_ref.meta().size as u64,
+            addr: packet_ref.meta().addr.to_string(),
+            port: packet_ref.meta().port as u32,
+            flags: Some(ProtoPacketFlags {
+                discard: packet_ref.meta().discard(),
+                forwarded: packet_ref.meta().forwarded(),
+                repair: packet_ref.meta().repair(),
+                simple_vote_tx: packet_ref.meta().is_simple_vote_tx(),
+                tracer_packet: false,
+                from_staked_node: packet_ref.meta().is_from_staked_node(),
             }),
             sender_stake: 0,
         }),
@@ -46,7 +69,7 @@ pub fn packet_batches_to_proto_packets(
 ) -> impl Iterator<Item = ProtoPacket> + '_ {
     batches
         .iter()
-        .flat_map(|b| b.iter().filter_map(packet_to_proto_packet))
+        .flat_map(|b| b.iter().filter_map(packet_ref_to_proto_packet))
 }
 
 /// converts from a protobuf packet to packet
@@ -69,9 +92,7 @@ pub fn proto_packet_to_packet(p: &ProtoPacket) -> Packet {
             if flags.forwarded {
                 packet.meta_mut().flags.insert(PacketFlags::FORWARDED);
             }
-            if flags.tracer_packet {
-                packet.meta_mut().flags.insert(PacketFlags::TRACER_PACKET);
-            }
+            // TRACER_PACKET flag doesn't exist in current Solana version
             if flags.repair {
                 packet.meta_mut().flags.insert(PacketFlags::REPAIR);
             }
