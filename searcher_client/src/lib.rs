@@ -18,8 +18,8 @@ use jito_protos::{
 };
 use log::{info, warn};
 use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
     signature::{Keypair, Signature},
     transaction::VersionedTransaction,
 };
@@ -101,11 +101,11 @@ pub async fn send_bundle_with_confirmation<T>(
     bundle_results_subscription: &mut Streaming<BundleResult>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    T: tonic::client::GrpcService<tonic::body::BoxBody> + Send + 'static + Clone,
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + 'static + Clone,
     T::Error: Into<StdError>,
     T::ResponseBody: Body<Data = Bytes> + Send + 'static,
     <T::ResponseBody as Body>::Error: Into<StdError> + Send,
-    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::Future: std::marker::Send,
+    <T as tonic::client::GrpcService<tonic::body::Body>>::Future: std::marker::Send,
 {
     let bundle_signatures: Vec<Signature> =
         transactions.iter().map(|tx| tx.signatures[0]).collect();
@@ -203,11 +203,11 @@ pub async fn send_bundle_no_wait<T>(
     searcher_client: &mut SearcherServiceClient<T>,
 ) -> Result<Response<SendBundleResponse>, Status>
 where
-    T: tonic::client::GrpcService<tonic::body::BoxBody> + Send + 'static + Clone,
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + 'static + Clone,
     T::Error: Into<StdError>,
     T::ResponseBody: Body<Data = Bytes> + Send + 'static,
     <T::ResponseBody as Body>::Error: Into<StdError> + Send,
-    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::Future: std::marker::Send,
+    <T as tonic::client::GrpcService<tonic::body::Body>>::Future: std::marker::Send,
 {
     // convert them to packets + send over
     let packets: Vec<_> = transactions

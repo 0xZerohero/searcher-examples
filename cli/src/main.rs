@@ -12,13 +12,14 @@ use jito_searcher_client::{
 };
 use log::info;
 use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
+    message::Instruction,
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
-    system_instruction::transfer,
     transaction::{Transaction, VersionedTransaction},
 };
+use solana_system_interface::instruction::transfer;
 use spl_memo::build_memo;
 use tokio::time::sleep;
 use tonic::{
@@ -146,11 +147,11 @@ async fn main() {
 
 async fn process_commands<T>(args: Args, mut client: SearcherServiceClient<T>)
 where
-    T: tonic::client::GrpcService<tonic::body::BoxBody> + Send + 'static + Clone,
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + 'static + Clone,
     T::Error: Into<StdError>,
     T::ResponseBody: Body<Data = Bytes> + Send + 'static,
     <T::ResponseBody as Body>::Error: Into<StdError> + Send,
-    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::Future: std::marker::Send,
+    <T as tonic::client::GrpcService<tonic::body::Body>>::Future: std::marker::Send,
 {
     match args.command {
         Commands::NextScheduledLeader => {
@@ -278,10 +279,37 @@ where
                 .expect("get blockhash");
             let txs: Vec<_> = (0..num_txs)
                 .map(|i| {
+                    let memo_ix = build_memo(format!("jito bundle {i}: {message}").as_bytes(), &[]);
+                    let transfer_ix = transfer(&payer_keypair.pubkey(), &tip_account, lamports);
                     VersionedTransaction::from(Transaction::new_signed_with_payer(
                         &[
-                            build_memo(format!("jito bundle {i}: {message}").as_bytes(), &[]),
-                            transfer(&payer_keypair.pubkey(), &tip_account, lamports),
+                            Instruction {
+                                program_id: Pubkey::try_from(memo_ix.program_id.as_ref()).unwrap(),
+                                accounts: memo_ix
+                                    .accounts
+                                    .into_iter()
+                                    .map(|acc| solana_sdk::message::AccountMeta {
+                                        pubkey: Pubkey::try_from(acc.pubkey.as_ref()).unwrap(),
+                                        is_signer: acc.is_signer,
+                                        is_writable: acc.is_writable,
+                                    })
+                                    .collect(),
+                                data: memo_ix.data,
+                            },
+                            Instruction {
+                                program_id: Pubkey::try_from(transfer_ix.program_id.as_ref())
+                                    .unwrap(),
+                                accounts: transfer_ix
+                                    .accounts
+                                    .into_iter()
+                                    .map(|acc| solana_sdk::message::AccountMeta {
+                                        pubkey: Pubkey::try_from(acc.pubkey.as_ref()).unwrap(),
+                                        is_signer: acc.is_signer,
+                                        is_writable: acc.is_writable,
+                                    })
+                                    .collect(),
+                                data: transfer_ix.data,
+                            },
                         ],
                         Some(&payer_keypair.pubkey()),
                         &[&payer_keypair],

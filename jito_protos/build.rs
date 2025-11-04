@@ -1,19 +1,16 @@
-use tonic_build::configure;
-
-fn main() {
-    configure()
-        .compile(
-            &[
-                "protos/auth.proto",
-                "protos/block.proto",
-                "protos/block_engine.proto",
-                "protos/bundle.proto",
-                "protos/packet.proto",
-                "protos/relayer.proto",
-                "protos/searcher.proto",
-                "protos/shared.proto",
-            ],
-            &["protos"],
-        )
-        .unwrap();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tonic_prost_build::configure().compile_protos(
+        &[
+            "protos/auth.proto",
+            "protos/block.proto",
+            "protos/block_engine.proto",
+            "protos/bundle.proto",
+            "protos/packet.proto",
+            "protos/relayer.proto",
+            "protos/searcher.proto",
+            "protos/shared.proto",
+        ],
+        &["protos"],
+    )?;
+    Ok(())
 }
