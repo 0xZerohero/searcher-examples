@@ -5,8 +5,7 @@ use std::{
 };
 
 use bincode::serialize;
-use solana_packet::{Meta, PacketFlags};
-use solana_perf::packet::{Packet, PacketBatch, PacketRef, PACKET_DATA_SIZE};
+use solana_perf::packet::{Packet, PacketBatch, PacketFlags, PacketRef, PACKET_DATA_SIZE};
 use solana_sdk::transaction::VersionedTransaction;
 
 use crate::{
@@ -52,7 +51,7 @@ pub fn proto_packet_to_packet(p: &ProtoPacket) -> Packet {
     let mut data = [0u8; PACKET_DATA_SIZE];
     let copy_len = min(data.len(), p.data.len());
     data[..copy_len].copy_from_slice(&p.data[..copy_len]);
-    let mut packet = Packet::new(data, Meta::default());
+    let mut packet = Packet::new(data, Default::default());
     if let Some(meta) = &p.meta {
         packet.meta_mut().size = meta.size as usize;
         packet.meta_mut().addr = meta
